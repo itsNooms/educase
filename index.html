@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PopX App</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #e5e5e5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    /* Phone shell */
+    .phone {
+      width: 390px;
+      height: 780px;
+      background: #f7f7f9;
+      border-radius: 36px;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.22);
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Screen management */
+    .screen {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      padding: 32px 24px;
+      overflow-y: auto;
+      background: #f7f7f9;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(30px);
+      transition: opacity 0.28s ease, transform 0.28s ease;
+    }
+
+    .screen.active {
+      opacity: 1;
+      pointer-events: all;
+      transform: translateX(0);
+    }
+
+    /* ── SCREEN 1: Welcome ── */
+    #screen-welcome {
+      justify-content: flex-end;
+    }
+
+    .welcome-title {
+      font-size: 26px;
+      font-weight: 800;
+      color: #111;
+      margin-bottom: 10px;
+      line-height: 1.3;
+    }
+
+    .welcome-subtitle {
+      font-size: 14px;
+      color: #777;
+      line-height: 1.6;
+      margin-bottom: 32px;
+    }
+
+    /* ── SCREEN 2: Login ── */
+    #screen-login { justify-content: flex-start; }
+    #screen-register { justify-content: flex-start; }
+
+    .screen-title {
+      font-size: 26px;
+      font-weight: 800;
+      color: #111;
+      line-height: 1.3;
+      margin-bottom: 10px;
+    }
+
+    .screen-subtitle {
+      font-size: 14px;
+      color: #777;
+      line-height: 1.6;
+      margin-bottom: 28px;
+    }
+
+    /* Floating label inputs */
+    .field {
+      position: relative;
+      margin-bottom: 18px;
+    }
+
+    .field label {
+      position: absolute;
+      top: -9px;
+      left: 14px;
+      background: #f7f7f9;
+      padding: 0 4px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #7c3aed;
+      pointer-events: none;
+    }
+
+    .field input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1.5px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #111;
+      background: transparent;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .field input:focus {
+      border-color: #7c3aed;
+    }
+
+    .field input::placeholder { color: #bbb; }
+
+    /* Radio group */
+    .radio-group { margin: 16px 0 24px; }
+
+    .radio-group p {
+      font-size: 14px;
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    .radio-group p span { color: #e53e3e; }
+
+    .radio-options { display: flex; gap: 28px; }
+
+    .radio-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      color: #333;
+    }
+
+    .radio-option input[type="radio"] { display: none; }
+
+    .radio-circle {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid #bbb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.2s;
+    }
+
+    .radio-option input:checked + .radio-circle {
+      border-color: #7c3aed;
+    }
+
+    .radio-circle::after {
+      content: '';
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #7c3aed;
+      transform: scale(0);
+      transition: transform 0.2s;
+    }
+
+    .radio-option input:checked + .radio-circle::after {
+      transform: scale(1);
+    }
+
+    /* Buttons */
+    .btn {
+      width: 100%;
+      padding: 16px;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+
+    .btn:active { transform: scale(0.98); }
+
+    .btn-primary {
+      background: #7c3aed;
+      color: #fff;
+    }
+
+    .btn-primary:hover { opacity: 0.9; }
+
+    .btn-secondary {
+      background: #ddd6fe;
+      color: #333;
+      margin-top: 12px;
+    }
+
+    .btn-secondary:hover { opacity: 0.85; }
+
+    .btn-gray {
+      background: #ccc;
+      color: #fff;
+    }
+
+    /* Spacer */
+    .spacer { flex: 1; }
+
+    /* ── SCREEN 4: Account Settings ── */
+    #screen-settings { padding: 0; justify-content: flex-start; }
+
+    .settings-header {
+      padding: 24px;
+      border-bottom: 1px solid #e5e5e5;
+      font-size: 16px;
+      font-weight: 600;
+      color: #111;
+    }
+
+    .settings-profile-card {
+      margin: 16px;
+      background: #ececec;
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .profile-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .avatar-wrap {
+      position: relative;
+      width: 64px;
+      height: 64px;
+      flex-shrink: 0;
+    }
+
+    .avatar-wrap img {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .avatar-placeholder {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: #c4b5fd;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .camera-btn {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 22px;
+      height: 22px;
+      background: #7c3aed;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .camera-btn svg { width: 12px; height: 12px; fill: #fff; }
+
+    .profile-info h2 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #111;
+      margin-bottom: 4px;
+    }
+
+    .profile-info p {
+      font-size: 13px;
+      color: #777;
+    }
+
+    .profile-bio {
+      font-size: 13px;
+      color: #333;
+      line-height: 1.6;
+    }
+
+    .settings-divider {
+      border: none;
+      border-top: 1.5px dashed #ccc;
+      margin: 16px 0;
+    }
+
+
+  </style>
+</head>
+<body>
+
+<div class="phone">
+
+  <!-- ── Screen 1: Welcome ── -->
+  <div class="screen active" id="screen-welcome">
+    <div class="spacer"></div>
+    <h1 class="welcome-title">Welcome to PopX</h1>
+    <p class="welcome-subtitle">Lorem ipsum dolor sit amet,<br>consectetur adipiscing elit,</p>
+    <button class="btn btn-primary" onclick="goTo('screen-register')">Create Account</button>
+    <button class="btn btn-secondary" onclick="goTo('screen-login')">Already Registered? Login</button>
+  </div>
+
+  <!-- ── Screen 2: Login ── -->
+  <div class="screen" id="screen-login">
+    <h1 class="screen-title">Signin to your<br>PopX account</h1>
+    <p class="screen-subtitle">Lorem ipsum dolor sit amet,<br>consectetur adipiscing elit,</p>
+
+    <div class="field">
+      <label>Email Address</label>
+      <input type="email" id="login-email" placeholder="Enter email address" />
+    </div>
+
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="login-password" placeholder="Enter password" />
+    </div>
+
+    <button class="btn btn-gray" id="login-btn" onclick="handleLogin()">Login</button>
+
+    <div class="spacer"></div>
+  </div>
+
+  <!-- ── Screen 3: Register ── -->
+  <div class="screen" id="screen-register">
+    <h1 class="screen-title">Create your<br>PopX account</h1>
+
+    <div class="field">
+      <label>Full Name*</label>
+      <input type="text" id="reg-name" placeholder="Marry Doe" />
+    </div>
+
+    <div class="field">
+      <label>Phone number*</label>
+      <input type="tel" id="reg-phone" placeholder="+91 00000 00000" />
+    </div>
+
+    <div class="field">
+      <label>Email address*</label>
+      <input type="email" id="reg-email" placeholder="marry@example.com" />
+    </div>
+
+    <div class="field">
+      <label>Password *</label>
+      <input type="password" id="reg-password" placeholder="••••••••" />
+    </div>
+
+    <div class="field">
+      <label>Company name</label>
+      <input type="text" id="reg-company" placeholder="Your company" />
+    </div>
+
+    <div class="radio-group">
+      <p>Are you an Agency?<span>*</span></p>
+      <div class="radio-options">
+        <label class="radio-option">
+          <input type="radio" name="agency" value="yes" checked />
+          <span class="radio-circle"></span>
+          Yes
+        </label>
+        <label class="radio-option">
+          <input type="radio" name="agency" value="no" />
+          <span class="radio-circle"></span>
+          No
+        </label>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="handleRegister()">Create Account</button>
+  </div>
+
+  <!-- ── Screen 4: Account Settings ── -->
+  <div class="screen" id="screen-settings" style="padding:0;">
+    <div class="settings-header">Account Settings</div>
+
+    <div class="settings-profile-card">
+      <div class="profile-row">
+        <div class="avatar-wrap">
+          <div class="avatar-placeholder" id="avatar-initials">MD</div>
+          <div class="camera-btn">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.43-10H4.57C3.15 5.5 2 6.65 2 8.07v9.86C2 19.35 3.15 20.5 4.57 20.5h14.86c1.42 0 2.57-1.15 2.57-2.57V8.07C22 6.65 20.85 5.5 19.43 5.5M15 4l-1.5-2h-3L9 4h6z"/>
+            </svg>
+          </div>
+        </div>
+        <div class="profile-info">
+          <h2 id="settings-name">Marry Doe</h2>
+          <p id="settings-email">Marry@Gmail.Com</p>
+        </div>
+      </div>
+      <p class="profile-bio">
+        Lorem Ipsum Dolor Sit Amet, Consetetur Sadipscing Elitr, Sed Diam Nonumy Eirmod Tempor Invidunt Ut Labore Et Dolore Magna Aliquyam Erat, Sed Diam
+      </p>
+    </div>
+
+    <hr class="settings-divider" />
+  </div>
+
+
+
+</div>
+
+<script>
+  // ── Navigation ──
+  function goTo(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  // ── Login handler ──
+  function handleLogin() {
+    const email = document.getElementById('login-email').value.trim();
+    const pass  = document.getElementById('login-password').value.trim();
+    if (!email || !pass) {
+      alert('Please enter both email and password.');
+      return;
+    }
+    populateSettings(email, '');
+    goTo('screen-settings');
+  }
+
+  // ── Register handler ──
+  function handleRegister() {
+    const name  = document.getElementById('reg-name').value.trim();
+    const email = document.getElementById('reg-email').value.trim();
+    if (!name || !email) {
+      alert('Please fill in all required fields.');
+      return;
+    }
+    populateSettings(email, name);
+    goTo('screen-settings');
+  }
+
+  // ── Populate settings screen with user data ──
+  function populateSettings(email, name) {
+    const displayName = name || email.split('@')[0];
+    document.getElementById('settings-name').textContent = displayName;
+    document.getElementById('settings-email').textContent = email;
+
+    // Generate initials for avatar
+    const parts = displayName.split(' ');
+    const initials = parts.map(p => p[0]).join('').toUpperCase().slice(0, 2);
+    document.getElementById('avatar-initials').textContent = initials;
+  }
+
+  // ── Login button color: grey → purple when both fields filled ──
+  ['login-email', 'login-password'].forEach(id => {
+    document.getElementById(id).addEventListener('input', () => {
+      const e = document.getElementById('login-email').value.trim();
+      const p = document.getElementById('login-password').value.trim();
+      const btn = document.getElementById('login-btn');
+      if (e && p) {
+        btn.className = 'btn btn-primary';
+      } else {
+        btn.className = 'btn btn-gray';
+      }
+    });
+  });
+</script>
+</body>
+</html>
